@@ -36,6 +36,11 @@ if __name__ == "__main__":
 
                     steps, peaks, filtered = ped.process()
                     comms.send_message(f'Steps{steps}')
+                    plt.cla()
+                    plt.plot(filtered)
+                    plt.title("Step Count: %d" % steps)
+                    plt.show(block=False)
+                    plt.pause(0.001)
     except(Exception, KeyboardInterrupt) as e:
         print(e)                     # Exiting the program due to exception
     finally:

@@ -19,7 +19,7 @@ class Pedometer:
     __fs = 0           # Sampling rate in Hz
     __b = None         # Low-pass coefficients
     __a = None         # Low-pass coefficients
-    __thresh_low = 1   # Threshold from Tutorial 2
+    __thresh_low = 2.8   # Threshold from Tutorial 2
     __thresh_high = 20 # Threshold from Tutorial 2
 
     """
@@ -32,7 +32,7 @@ class Pedometer:
         self.__fs = fs
         self.__l1 = CircularList(data, num_samples)
         self.__filtered = CircularList([], num_samples)
-        self.__b, self.__a = filt.create_filter(3, 1.2, "lowpass", fs)
+        self.__b, self.__a = filt.create_filter(3, 1.3, "lowpass", fs)
 
     """
   Add new samples to the data buffer
@@ -59,10 +59,9 @@ class Pedometer:
         x = np.array(self.__l1[-self.__new_samples:])
 
         # Filter the signal (detrend, LP, MA, etc…)
-        # Compute the L1-Norm
-        ma = filt.moving_average(x, 20)                   # Compute Moving Average
-        dt = filt.detrend(ma)                              # Detrend the Signal                         # Compute the Gradient      
-        lp = filt.filter(self.__b, self.__a, dt)                       # Low-pass Filter Signal
+        ma = filt.moving_average(x, 20) # moving average            
+        dt = filt.detrend(ma) # detrending signal                                          
+        lp = filt.filter(self.__b, self.__a, dt) # filters both delay and transient                   
 
         grad = filt.gradient(dt)  
 
