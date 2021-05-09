@@ -32,7 +32,7 @@ class Pedometer:
         self.__fs = fs
         self.__l1 = CircularList(data, num_samples)
         self.__filtered = CircularList([], num_samples)
-        self.__b, self.__a = filt.create_filter(3, 1.3, "lowpass", fs)
+        self.__b, self.__a = filt.create_filter(3, 1, "lowpass", fs)
 
     """
   Add new samples to the data buffer
@@ -46,7 +46,6 @@ class Pedometer:
         else:
             num_add = len(ax)
             l1 = l1.tolist()
-
         self.__l1.add(l1)
         self.__new_samples += num_add
 
@@ -59,9 +58,9 @@ class Pedometer:
         x = np.array(self.__l1[-self.__new_samples:])
 
         # Filter the signal (detrend, LP, MA, etc…)
-        ma = filt.moving_average(x, 20) # moving average            
-        dt = filt.detrend(ma) # detrending signal                                          
-        lp = filt.filter(self.__b, self.__a, dt) # filters both delay and transient                   
+        ma = filt.moving_average(x, 20) # moving average     
+        dt = filt.detrend(ma) # detrending signal
+        x = filt.filter(self.__b, self.__a, dt) # filters both delay and transient    
 
         grad = filt.gradient(dt)  
 
