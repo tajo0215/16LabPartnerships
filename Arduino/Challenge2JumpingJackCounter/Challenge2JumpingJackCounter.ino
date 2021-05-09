@@ -4,9 +4,9 @@ int sampleTime = 0; // Time of last sample (in Sampling tab)
 int ax = 0; int ay = 0; int az = 0; // Acceleration (from readAccelSensor())
 bool sending;
 
-String dataStore[200];
+String dataStore[250][4];
 bool collectData = true;
-int idx = 0;
+int idxr = 0;
 
 void setup() {
   setupAccelSensor();
@@ -17,26 +17,20 @@ void setup() {
   writeDisplay("Sleep", 0, true);
 }
 
-bool addData() {
-  if (idx + 1 <= 200) {
-    dataStore[idx] = String(sampleTime) + "," + String(ax) + "," + String(ay) + "," + String(az);
-    idx += 1;
-    return true;
-  }
-  return false;
-}
 
 void loop() {
   int btnPress = digitalRead(btnPin);
   String command = receiveMessage();
 
   if (btnPress == LOW) {
-    sendMessage("s");
-      for (int i = 0; i < 200; i++) {
-        sendMessage(dataStore[i]);
-        dataStore[i] = "";
-      }
+    String inputStr = "";
+    int i;
+    for(i = 0; i < 200; i++){
+      inputStr += dataStore[i][0] + "," + dataStore[i][1] + "," + dataStore[i][2] + "," + dataStore[i][3] + ",";
     }
+    collectData = false;
+    sendMessage(inputStr);
+  }
   if (command == "sleep") {
     sending = false;
     writeDisplay("Sleep", 0, true);
@@ -51,6 +45,12 @@ void loop() {
     writeDisplay(msg.c_str(), 2, true);
   }
   if (sending && sampleSensors()) {
-    addData();
+    if (collectData && idxr + 1 < 201) {
+      dataStore[idxr][0] = String(sampleTime);
+      dataStore[idxr][1] = String(ax);
+      dataStore[idxr][2] = String(ay);
+      dataStore[idxr][3] = String(az);
+      idxr += 1;
+    }
   }
 }
