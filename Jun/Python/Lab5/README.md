@@ -1,5 +1,6 @@
 # Lab 5 Report
 ### Seok Jun Park (A15745118)
+Lab Partner: Kanishka Roy  
 Date: 05/10/2021
 
 ## Tutorials
@@ -147,4 +148,29 @@ We can test it online while we are actually walking with our ESP32 on our hands.
 
 ## Challenges
 
-### Challenge 1: Pig Latin Translator
+### Challenge 1: Online Pedometer
+
+The goal of this challenge is to create a completed Pedometer. The logical flows of Pedometer are as below:
+
+1. Python sends "wearable" to the MCU to start streaming data.
+2. The Pedometer receives the data in Python.
+3. Periodically (e.g., once every second), the Pedometer processes the received data and updates the step count.
+4. The Python program sends the step count back to the MCU.
+5. The OLED displays the current step count. 
+
+### Challenge 2: Jumping Jack Counter
+
+The goal of this challenge is to create a jumping jack counter. The logical flows of our jumping jack counter are as below:
+
+1. Once the program starts, we store the data of jumping to MCU as an array while we are doing jumping jacks.
+2. If we are done enough jumping jacks, press BUTTON to see how many jumping jack we made. 
+3. After press BUTTON, the Python program processes the data (filtering) to compute the right number of jumping jacks. 
+4. Finally, our OLED displays the completed Jumping Jacks we made! 
+
+Below, you can see our jumping jack counter works correctly. As shown in GIF, I did 4 jumping jacks, and OLED printed the 
+value of jumping count as "Jumps: 4" once I pushed the BUTTON. 
+
+**Let's Do Jumping Jack**  
+![Gif of Condition](data/challenge2JumpingCount.gif) 
+
+![Image Caption](data/challenge2OLED.png)
