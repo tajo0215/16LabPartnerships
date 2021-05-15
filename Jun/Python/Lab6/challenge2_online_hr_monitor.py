@@ -19,7 +19,8 @@ if __name__ == "__main__":
     
     hr_monitor = HRMonitor(num_samples, fs, [])
     
-    comms = Communication("/dev/cu.usbmodem142101", 115200)
+    #comms = Communication("/dev/cu.usbmodem142101", 115200)
+    comms = Communication("COM11", 115200)
     comms.clear()
     input("Ready to collect data? Press [ENTER] to begin.\n")
     print("Start measuring in...")

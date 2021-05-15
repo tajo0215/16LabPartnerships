@@ -32,7 +32,7 @@ void loop() {
     writeDisplay(hr.c_str(), 2, true);
   }
 
-  if (sending && sampleSensor()) {
+  if (sending && sampleSensors()) {
     String response = String(sampleTime) + ",";
     response += String(ax) + "," + String(ay) + "," + String(az);
     response += "," + String(ppg);
