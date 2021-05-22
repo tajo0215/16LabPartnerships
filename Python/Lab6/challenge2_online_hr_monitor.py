@@ -19,7 +19,7 @@ if __name__ == "__main__":
     
     hr_monitor = HRMonitor(num_samples, fs, [])
     
-    comms = Communication("COM4", 115200)
+    comms = Communication("COM11", 115200)
     comms.clear()
     input("Ready to collect data? Press [ENTER] to begin.\n")
     print("Start measuring in...")
@@ -37,13 +37,13 @@ if __name__ == "__main__":
             message = comms.receive_message()
             if(message != None):
                 try:
-                    (m1, _, _, _, m2) = message.split(",")
+                    (m1, m2, m3, m4, m5) = message.split(",")
                 except Exception as e:        # if corrupted data, skip the sample
                     print(e)
                     print("Corrupted data. Skipping sample: {}".format(message))
                     continue
                 
-                hr_monitor.add(int(m1)/1e3, int(m2))
+                hr_monitor.add(int(m1)/1e3, int(m5))
                 
                 current_time = time()
                 if (current_time - previous_time > process_time):
