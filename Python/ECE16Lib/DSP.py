@@ -93,3 +93,12 @@ def count_peaks(x, thresh_low, thresh_high):
             locations.append(peak)
 
     return count, locations
+
+
+"""
+Normalize the signal from 0 to 1
+"""
+
+
+def normalize(x):
+    return (x - min(x)) / (max(x) - min(x))

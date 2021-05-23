@@ -59,7 +59,7 @@ if __name__ == "__main__":
     input("First, the GMM training begins. Press [ENTER] to begin.\n")
     gmm = hr_monitor.train(directory, subjects)
     
-    comms = Communication("COM4", 115200)
+    comms = Communication("COM5", 115200)
     comms.clear()
     input("Ready to collect data? Press [ENTER] to begin.\n")
     print("Start measruing in...")
