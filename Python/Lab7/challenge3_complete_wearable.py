@@ -1,6 +1,8 @@
+from ECE16Lib.CircularList import CircularList
 from ECE16Lib.Communication import Communication
 from ECE16Lib.Pedometer import Pedometer
 from ECE16Lib.HRMonitor import HRMonitor
+from ECE16Lib.IdleDetector import IdleDetector
 
 import numpy as np 
 import time
@@ -36,8 +38,11 @@ if __name__ == "__main__":
     num_samples = 250               # 5 seconds of data @ 50Hz
     process_time = 1                # compute the step count every second
 
+    L_inf = CircularList([], num_samples)
+
     ped = Pedometer(num_samples, fs, [])
     hr_monitor = HRMonitor(num_samples, fs, [])
+    idleDetector = IdleDetector(100, .25, .02, "COM5", 115200) 
 
     comms = Communication("COM5", 115200)
     comms.clear()                   # just in case any junk is in the pipes
@@ -60,10 +65,12 @@ if __name__ == "__main__":
                     print(e)
                     print("Corrupted data. Skipping sample: {}".format(message))
                     continue
-                
-                if hr_cmd == "HR":
+
+                if "HR" in hr_cmd:
                     hr_monitor.add(int(m1)/1e3, int(m5)) # adds the time and ppg data
                 
+                L_inf.add(np.max([int(m2), int(m3), int(m4)]))
+                point = L_inf[len(L_inf) - 1]
 
                 ped.add(int(m2), int(m3), int(m4))
                 
@@ -73,7 +80,7 @@ if __name__ == "__main__":
 
                     weather_time_msg = updateWeather(comms, weather)
 
-                    if hr_cmd == "HR":
+                    if "HR" in hr_cmd:
                         hr, peaks, filtered = hr_monitor.process() # process the data
                         hr_msg = f'{hr:.2f}'# format the message to 2 decimal places
                     else:
@@ -81,7 +88,9 @@ if __name__ == "__main__":
 
                     steps, peaks, filtered = ped.process() #procceses data
 
-                    msg = f"D:{weather_time_msg};{hr_msg};{steps}"
+                    idle = "Idle" if idleDetector.detectIdleWearable(point) else "Active"
+
+                    msg = f"D:{weather_time_msg};{hr_msg};{steps};{idle}"
                     comms.send_message(msg)
 
                     print(msg)

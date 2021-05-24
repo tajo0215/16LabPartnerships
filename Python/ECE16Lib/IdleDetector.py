@@ -1,7 +1,7 @@
 from ECE16Lib.Communication import Communication
 from ECE16Lib.CircularList import CircularList
 from matplotlib import pyplot as plt
-from time import time
+from time import time, time_ns
 import numpy as np
 
 
@@ -48,7 +48,7 @@ class IdleDetector():
         self.__L1 = CircularList([], self.num_samples)
         self.__L_inf = CircularList([], self.num_samples)
 
-        self.__comms = Communication(com_port, baud_rate=baud_rate)
+        #self.__comms = Communication(com_port, baud_rate=baud_rate)
 
         self.figure, self.axis = plt.subplots(2, 2)
 
@@ -112,6 +112,30 @@ class IdleDetector():
                 self.__comms.send_message("Active State")
             else:
                 self.idle = True
+
+    def detectIdleWearable(self, point):
+        if time() - self.idle_time_previous >= 5:
+            self.idle_time_previous = time()
+            if point > 2427 + 100 or point < 2427 - 100:
+                self.idle = False
+                return False
+            else:
+                self.idle = True
+                return True
+                #self.__comms.send_message("Idle State")
+        if self.idle and time() - self.active_time >= 1:
+            self.active_time = time()
+            if point > 2427 + 100 or point < 2427 - 100: 
+                self.idle = False
+                self.idle_time_previous = time()
+                return False
+                #self.__comms.send_message("Active State")
+            else:
+                self.idle = True
+                return True
+
+
+
     """ 
     Main Function that runs everything
 

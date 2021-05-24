@@ -3,10 +3,11 @@ int ppg = 0;
 int sampleTime = 0;
 bool sending;
 
-const int btnPin = 14;
-
 bool getHR = false;
+bool motorOn = false;
 unsigned long lastHR = 0;
+unsigned long lastMotor = 0;
+bool HROn = false;
 
 void setup() {
   setupAccelSensor();
@@ -14,7 +15,7 @@ void setup() {
   setupDisplay();
   setupPhotoSensor();
   setupMotor();
-  pinMode(btnPin, INPUT_PULLUP);
+  setupButton();
   sending = false;
   writeDisplay("Sleep", 0, true);
 }
@@ -32,21 +33,35 @@ void loop() {
     String weather_time = command.substring(2, command.indexOf(";"));
     command = command.substring(command.indexOf(";") + 1);
     String hr_msg = command.substring(0, command.indexOf(";"));
-    String steps = command.substring(command.indexOf(";") + 1);
+    command = command.substring(command.indexOf(";") + 1);
+    String steps = command.substring(0, command.indexOf(";"));
+    String idle = command.substring(command.indexOf(";") + 1);
 
     writeDisplayCSV(weather_time, 2);
 
     if (hr_msg != "NULL"){
       String msg = "HR: " + hr_msg;
       writeDisplay(msg.c_str(), 3, false);
+      HROn = true;
     } else {
       String msg = "Steps: " + steps;
-      writeDisplay(msg.c_str(), 3, false);
+      if (HROn){
+        writeDisplay(msg.c_str(), 3, true);
+        HROn = false;
+      }  else {
+        writeDisplay(msg.c_str(), 3, false);
+      }
+    }
+
+    if(idle == "Idle"){
+      motorOn = true;
+      activateMotor(255);
+      lastMotor = millis();
     }
   }
 
-  
-  if (digitalRead(btnPin) == LOW){
+
+  if(HRBtn()){
     getHR = true;
     lastHR = millis();
   }
@@ -66,5 +81,10 @@ void loop() {
 
   if(millis() - lastHR >= 10000){
     getHR = false;
+  }
+
+  if(millis() - lastMotor >= 1000 && motorOn){
+    motorOn = false;
+    deactivateMotor();
   }
 }
