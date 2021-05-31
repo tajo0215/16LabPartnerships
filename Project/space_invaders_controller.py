@@ -15,9 +15,11 @@ mySocket.setblocking(False)
 
 class PygameController:
 	comms = None
+	pause = None
 
 	def __init__(self, serial_name, baud_rate):
 		self.comms = Communication(serial_name, baud_rate)
+		self.pause = False
 
 	def receieveMessage(self):
 		msg = None
@@ -76,7 +78,14 @@ class PygameController:
 						pass
 				elif message == 10:
 					command = "QUIT"
-
+				elif message == 11:
+					if self.pause:
+						command = "UNPAUSE"
+						self.pause = False
+					else:
+						command = "PAUSE"
+						self.pause = True
+						self.comms.send_message("pause")
 				if command is not None:
 					mySocket.send(command.encode("UTF-8"))
 
@@ -84,6 +93,8 @@ class PygameController:
 
 				if arduinoMsg == "BUZZ":
 					self.comms.send_message("buzz")
+				elif arduinoMsg == "quit":
+					self.comms.send_message("quit")
 
 
 

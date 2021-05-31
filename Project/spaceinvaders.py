@@ -361,6 +361,7 @@ class SpaceInvaders(object):
         self.screen = SCREEN
         self.background = image.load(IMAGE_PATH + 'background.jpg').convert()
         self.startGame = False
+        self.pauseGame = False
         self.mainScreen = True
         self.gameOver = False
         # Counter for enemy starting position (increased each new round)
@@ -481,6 +482,7 @@ class SpaceInvaders(object):
             print("Command: " + msg)
 
             if msg == "QUIT":
+                mySocket.sendto("quit".encode('utf-8'), self.client_ip)
                 sys.exit()
             elif msg == "FIRE":
                 if len(self.bullets) == 0 and self.shipAlive:
@@ -507,6 +509,12 @@ class SpaceInvaders(object):
                         self.bullets.add(rightbullet)
                         self.allSprites.add(self.bullets)
                         self.sounds['shoot2'].play()
+            elif msg == "PAUSE":
+                self.pauseGame = True
+                print("Game Paused")
+            elif msg == "UNPAUSE":
+                self.pauseGame = False
+                print("Game Unpaused")
             else:
                 self.player.update_udp_socket(msg)
         except BlockingIOError:
@@ -619,6 +627,7 @@ class SpaceInvaders(object):
 
     def create_game_over(self, currentTime):
         self.screen.blit(self.background, (0, 0))
+        mySocket.sendto("quit".encode("utf-8"), self.client_ip)
         passed = currentTime - self.timer
         if passed < 750:
             self.gameOverText.draw(self.screen)
@@ -635,10 +644,7 @@ class SpaceInvaders(object):
             if self.should_exit(e):
                 sys.exit()
 
-    def main(self):
-        global firstStart
-        firstStart = True
-        client_ip = None 
+    def main(self): 
         while True:
             if self.mainScreen:
                 self.screen.blit(self.background, (0, 0))
@@ -662,7 +668,8 @@ class SpaceInvaders(object):
                         self.reset(0)
                         self.startGame = True
                         self.mainScreen = False
-
+            elif self.pauseGame:
+                self.check_input_udp_socket()
             elif self.startGame:
 
                 if not self.enemies and not self.explosionsGroup:
