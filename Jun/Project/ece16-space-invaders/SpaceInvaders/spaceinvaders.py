@@ -677,9 +677,9 @@ class SpaceInvaders(object):
                 self.top1 = int(high_list[0])
                 self.top2 = int(high_list[1])
                 self.top3 = int(high_list[2])
-                #topscore_msg = f"TOP 3 Score:{top1},{top2},{top3}"
-                #print(topscore_msg)
-                #mySocket.sendto(topscore_msg.encode("utf-8"), self.client_ip)
+                topscore_msg = f"TOP 3 Score:{self.top1},{self.top2},{self.top3}"
+                print(topscore_msg)
+                mySocket.sendto(topscore_msg.encode("utf-8"), self.client_ip)
 
                 self.startGame = False
                 
