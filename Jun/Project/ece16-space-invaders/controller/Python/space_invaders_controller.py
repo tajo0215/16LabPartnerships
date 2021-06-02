@@ -108,6 +108,9 @@ class PygameController:
           if "Lives" in socketMsg:
             print(socketMsg)
             self.comms.send_message(socketMsg)
+          elif "TOP" in socketMsg:
+            print(socketMsg)
+            self.comms.send_message(socketMsg)
         
 
 if __name__== "__main__":

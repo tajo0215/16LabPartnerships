@@ -8,7 +8,9 @@ import sys
 from os.path import abspath, dirname
 from random import choice
 import numpy as np
+import pandas as pd
 from time import sleep
+import csv
 
 ''' ============================================================ '''
 import socket
@@ -622,8 +624,8 @@ class SpaceInvaders(object):
             self.mysteryGroup.add(newShip)
             #data = np.column_stack([self.score])
         
-        data = np.column_stack([self.score])
-        np.savetxt(".\\data\\score.csv", data, delimiter=",")
+        #data = np.vstack([self.score])
+        #np.savetxt(".\\data\\score.csv", data)
 
         for player in sprite.groupcollide(self.playerGroup, self.enemyBullets,
                                           True, True).keys():
@@ -646,8 +648,41 @@ class SpaceInvaders(object):
                 lives_msg = "Lives: " + str(0)
                 print(lives_msg)
                 mySocket.sendto(lives_msg.encode("utf-8"), self.client_ip)
+
+                #file = open(".\\data\\score.csv", "a")
+                #file.write(str(self.score))
+                #file.close()
+
+                with open(".\\data\\score.csv", "a") as f:
+                    writer = csv.writer(f)
+                    writer.writerow([self.score])
+
                 self.gameOver = True
+
+                file = pd.read_csv('.\\data\\score.csv', skiprows=[-1], na_values = ['no info', '.'])
+
+                copylist = []
+                for i in file['Scores']:
+                    copylist.append(i)
+
+                high_list = []
+                for i in range(0,3):
+                    temp = 0
+                    for score in copylist:
+                        if score > temp:
+                            temp = score
+                    copylist.remove(temp)
+                    high_list.append(temp)
+                
+                self.top1 = int(high_list[0])
+                self.top2 = int(high_list[1])
+                self.top3 = int(high_list[2])
+                #topscore_msg = f"TOP 3 Score:{top1},{top2},{top3}"
+                #print(topscore_msg)
+                #mySocket.sendto(topscore_msg.encode("utf-8"), self.client_ip)
+
                 self.startGame = False
+                
             self.sounds['shipexplosion'].play()
             ShipExplosion(player, self.explosionsGroup)
             mySocket.sendto("BUZZ".encode("utf-8"), self.client_ip)
@@ -766,9 +801,6 @@ class SpaceInvaders(object):
             elif self.gameOver:
                 currentTime = time.get_ticks()
                 # Reset enemy starting position
-                hs = np.genfromtxt(".\\data\\score.csv", delimiter=",")
-                print(hs)
-
                 self.enemyPosition = ENEMY_DEFAULT_POSITION
                 self.create_game_over(currentTime)
 
