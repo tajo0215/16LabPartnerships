@@ -7,6 +7,10 @@ from pygame import *
 import sys
 from os.path import abspath, dirname
 from random import choice
+import numpy as np
+import pandas as pd
+from time import sleep
+import csv
 
 ''' ============================================================ '''
 import socket
@@ -64,15 +68,17 @@ class Ship(sprite.Sprite):
         if direction == "LEFT" and self.rect.x > 10:
             self.rect.x -= self.speed
         if direction == "LEFTx2" and self.rect.x > 10:
-            self.rect.x -= self.speed * 1.5
+            self.rect.x -= (self.speed * 1.5)
         if direction == "LEFTx3" and self.rect.x > 10:
-            self.rect.x -= self.speed * 2.0
-        if direction == "RIGHT" and self.rect.y < 740:
+            self.rect.x -= (self.speed * 2.0)
+        if direction == "RIGHT" and self.rect.x < 740:
             self.rect.x += self.speed
-        if direction == "RIGHTx2" and self.rect.y < 740:
-            self.rect.x += self.speed * 1.5
-        if direction == "RIGHTx3" and self.rect.y < 740:
-            self.rect.x += self.speed * 1.5
+        if direction == "RIGHTx2" and self.rect.x < 740:
+            self.rect.x += (self.speed * 1.5)
+        if direction == "RIGHTx3" and self.rect.x < 740:
+            self.rect.x += (self.speed * 2.0)
+        #if direction == "FLAT":
+        #    self.rect.x = 0
         game.screen.blit(self.image, self.rect)
 
 
@@ -360,8 +366,8 @@ class SpaceInvaders(object):
         self.caption = display.set_caption('Space Invaders')
         self.screen = SCREEN
         self.background = image.load(IMAGE_PATH + 'background.jpg').convert()
-        self.startGame = False
         self.pauseGame = False
+        self.startGame = False
         self.mainScreen = True
         self.gameOver = False
         # Counter for enemy starting position (increased each new round)
@@ -377,12 +383,20 @@ class SpaceInvaders(object):
         self.enemy4Text = Text(FONT, 25, '   =  ?????', RED, 368, 420)
         self.scoreText = Text(FONT, 20, 'Score', WHITE, 5, 5)
         self.livesText = Text(FONT, 20, 'Lives ', WHITE, 640, 5)
+        self.pauseText = Text(FONT, 50, 'Game Paused', WHITE, 200, 5)
 
         self.life1 = Life(715, 3)
         self.life2 = Life(742, 3)
         self.life3 = Life(769, 3)
         self.livesGroup = sprite.Group(self.life1, self.life2, self.life3)
+
         self.client_ip = None
+
+    def toggle_pause(self):
+        if self.pauseGame == True:
+            self.pauseGame = False
+        else:
+            self.pauseGame = True
 
     def reset(self, score):
         self.player = Ship()
@@ -480,16 +494,27 @@ class SpaceInvaders(object):
             self.client_ip = client_ip
             msg = msg.decode('utf-8')
             print("Command: " + msg)
+            #print(self.client_ip)
+            #print(client_ip)
 
             if msg == "QUIT":
-                mySocket.sendto("quit".encode('utf-8'), self.client_ip)
+                ending_msg = "Ending..."
+                print(ending_msg)
+                mySocket.sendto(ending_msg.encode('utf-8'), self.client_ip)
+                for k in range(3,0,-1):
+                    print(k)
+                    sleep(1)
+                print("Good Bye!\n")
                 sys.exit()
             elif msg == "FIRE":
                 if len(self.bullets) == 0 and self.shipAlive:
 
-                    score_msg = "Score: " + str(self.score)
-                    print(score_msg)
-                    mySocket.sendto(score_msg.encode('utf-8'), self.client_ip)
+                    #data = np.column_stack([self.score])
+                    #np.savetxt(".\\data\\score.csv", data)
+
+                    #score_msg = "Score: " + str(self.score)
+                    #print(score_msg)
+                    #mySocket.sendto(score_msg.encode('utf-8'), self.client_ip)
 
                     if self.score < 1000:
                         bullet = Bullet(self.player.rect.x + 23,
@@ -509,12 +534,16 @@ class SpaceInvaders(object):
                         self.bullets.add(rightbullet)
                         self.allSprites.add(self.bullets)
                         self.sounds['shoot2'].play()
+                    
             elif msg == "PAUSE":
-                self.pauseGame = True
+                #self.pauseGame = True
+                self.toggle_pause()
+                self.pauseText.draw(self.screen)
                 print("Game Paused")
-            elif msg == "UNPAUSE":
-                self.pauseGame = False
-                print("Game Unpaused")
+            elif msg == "RESUME":
+                #self.pauseGame = False
+                self.toggle_pause()
+                print("Game Resumed")    
             else:
                 self.player.update_udp_socket(msg)
         except BlockingIOError:
@@ -576,6 +605,9 @@ class SpaceInvaders(object):
             self.sounds['invaderkilled'].play()
             self.calculate_score(enemy.row)
             EnemyExplosion(enemy, self.explosionsGroup)
+            score_msg = "Score: " + str(self.score)
+            print(score_msg)
+            mySocket.sendto(f"Score:{self.score}".encode("utf-8"), self.client_ip)
             self.gameTimer = time.get_ticks()
 
         for mystery in sprite.groupcollide(self.mysteryGroup, self.bullets,
@@ -584,24 +616,85 @@ class SpaceInvaders(object):
             self.sounds['mysterykilled'].play()
             score = self.calculate_score(mystery.row)
             MysteryExplosion(mystery, score, self.explosionsGroup)
+            score_msg = "Score: " + str(self.score)
+            print(score_msg)
+            mySocket.sendto(f"Score:{self.score}".encode("utf-8"), self.client_ip)
             newShip = Mystery()
             self.allSprites.add(newShip)
             self.mysteryGroup.add(newShip)
+            #data = np.column_stack([self.score])
+        
+        #data = np.vstack([self.score])
+        #np.savetxt(".\\data\\score.csv", data)
 
         for player in sprite.groupcollide(self.playerGroup, self.enemyBullets,
                                           True, True).keys():
             if self.life3.alive():
+                lives_msg = "Lives: " + str(3)
+                print(lives_msg)
+                if self.client_ip != None:
+                    mySocket.sendto(lives_msg.encode("utf-8"), self.client_ip)
                 self.life3.kill()
             elif self.life2.alive():
+                lives_msg = "Lives: " + str(2)
+                print(lives_msg)
+                if self.client_ip != None:
+                    mySocket.sendto(lives_msg.encode("utf-8"), self.client_ip)
                 self.life2.kill()
             elif self.life1.alive():
+                lives_msg = "Lives: " + str(1)
+                print(lives_msg)
+                if self.client_ip != None:
+                    mySocket.sendto(lives_msg.encode("utf-8"), self.client_ip)
                 self.life1.kill()
             else:
+                lives_msg = "Lives: " + str(0)
+                print(lives_msg)
+                if self.client_ip != None:
+                    mySocket.sendto(lives_msg.encode("utf-8"), self.client_ip)
+
+                #file = open(".\\data\\score.csv", "a")
+                #file.write(str(self.score))
+                #file.close()
+
+                with open(".\\data\\score.csv", "a") as f:
+                    writer = csv.writer(f)
+                    writer.writerow([self.score])
+
                 self.gameOver = True
+
+                file = pd.read_csv('.\\data\\score.csv', skiprows=[-1], na_values = ['no info', '.'])
+
+                copylist = []
+                for i in file['Scores']:
+                    copylist.append(i)
+
+                high_list = []
+                for i in range(0,3):
+                    temp = 0
+                    for score in copylist:
+                        if score > temp:
+                            temp = score
+                    copylist.remove(temp)
+                    high_list.append(temp)
+                
+                self.top1 = int(high_list[0])
+                self.top2 = int(high_list[1])
+                self.top3 = int(high_list[2])
+                topscore_msg = f"TOP 3 Score:{self.top1},{self.top2},{self.top3}"
+                print(topscore_msg)
+
+                if self.client_ip != None:
+                    mySocket.sendto(f'TS:{self.top1},{self.top2}, {self.top3}'.encode("utf-8"), self.client_ip)
+
                 self.startGame = False
+                
             self.sounds['shipexplosion'].play()
             ShipExplosion(player, self.explosionsGroup)
-            mySocket.sendto("BUZZ".encode("utf-8"), self.client_ip)
+
+            if self.client_ip != None:
+                mySocket.sendto("BUZZ".encode("utf-8"), self.client_ip)
+            print("Enemy Hit")
             self.makeNewShip = True
             self.shipTimer = time.get_ticks()
             self.shipAlive = False
@@ -627,7 +720,6 @@ class SpaceInvaders(object):
 
     def create_game_over(self, currentTime):
         self.screen.blit(self.background, (0, 0))
-        mySocket.sendto("quit".encode("utf-8"), self.client_ip)
         passed = currentTime - self.timer
         if passed < 750:
             self.gameOverText.draw(self.screen)
@@ -644,7 +736,7 @@ class SpaceInvaders(object):
             if self.should_exit(e):
                 sys.exit()
 
-    def main(self): 
+    def main(self):
         while True:
             if self.mainScreen:
                 self.screen.blit(self.background, (0, 0))
@@ -668,10 +760,11 @@ class SpaceInvaders(object):
                         self.reset(0)
                         self.startGame = True
                         self.mainScreen = False
+
             elif self.pauseGame:
                 self.check_input_udp_socket()
+                
             elif self.startGame:
-
                 if not self.enemies and not self.explosionsGroup:
                     currentTime = time.get_ticks()
                     if currentTime - self.gameTimer < 3000:
