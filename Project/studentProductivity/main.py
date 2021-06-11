@@ -12,22 +12,27 @@ def main():
     comms = Communication("COM5", 115200)
     comms.clear()
 
-    if input("Would you like to add habits today? Y/N") == "Y":
+
+    # asks for any  new habits to be added 
+    if input("Would you like to add habits today? Y/N: ") == "Y":
         (name, habit_time) = input("Please input your habit: Habit Name, Habit Time (XX:XX PM/AM Format): ").split(',')
         habitTracker.addHabit(name, habit_time)
 
+        # keeps asking until the user types N
         while True:
-            if input("Would you like to add another habit? Y/N") == "Y":
+            if input("Would you like to add another habit? Y/N: ") == "Y":
                 (name, habit_time) = input("Please input your habit: Habit Name, Habit Time (XX:XX PM/AM Format): ").split(',')
                 habitTracker.addHabit(name, habit_time)
             else:
                 break
     
+    # orders the habits in order of increasing time throughout the day 
     habitTracker.orderHabits()
+
+    # used to store time values 
     habit_time = 0
     event_time = 0
-
-    events_today = {}
+    timer_time = 0
 
     timer_on = False
 
@@ -35,6 +40,8 @@ def main():
 
     while True:
 
+
+        # if 
         if time.time() - habit_time >= 10:
             habit_time = time.time()
 
@@ -54,7 +61,8 @@ def main():
                 print(msg)
                 comms.send_message(msg)
 
-        if timer_on:
+        if timer_on and time.time() - timer_time >= 60:
+            timer_time = time.time()
             msg = pomodoro_timer.main_loop()
             if "None" not in msg:
                 comms.send_message(msg)

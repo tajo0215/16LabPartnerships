@@ -117,11 +117,14 @@ class Pomodoro:
     __lastMinuteBreak = 0
     __lastMinuteBreakIdx = 0
     __startMinute = 0
+    __break = False
+
+    
 
     def __init__(self):
                 
-        self.__working_duration = 30
-        self.__break_duration = 15 
+        self.__working_duration = 10
+        self.__break_duration = 5
         
     def main_loop(self):              
 
@@ -134,35 +137,36 @@ class Pomodoro:
             self.__startMinute = minute
 
         if minute != self.__lastMinute:
-            if self.__lastMinute - minute >= 1:
+            if minute - self.__lastMinute >= 1:
                 self.__lastMinuteIdx += 1
                 self.__lastMinute = minute
         
 
         msg = "None"   
 
-        if self.__lastMinuteIdx - 1 == self.__working_duration:
+        if self.__lastMinuteIdx - 1 == self.__working_duration and not self.__break:
             msg = "Good Job! Time to Break!"
+            self.__break = True
             self.__startMinute = 0
             self.__lastMinuteBreakIdx += 1
-            print(msg + f"({datetime.now().strftime('%H:%M:%S')})")
+            print(msg + f"({datetime.datetime.now().strftime('%H:%M:%S')})")
             pass
-        elif (self.__lastMinuteIdx - 1) % (5 * 60) == 0:
+        elif (self.__lastMinuteIdx - 1) % 2 == 0:
             msg = f"Focus, {30-int((self.__lastMinuteIdx - 1)/60)} mins left"
-            print(msg + f"({datetime.now().strftime('%H:%M:%S')})")
-        elif (self.__lastMinuteIdx - 1) == self.__working_duration - 1 * 60:
+            print(msg + f"({datetime.datetime.now().strftime('%H:%M:%S')})")
+        elif (self.__lastMinuteIdx - 1) == self.__working_duration - 1:
             msg = f"Hang Up, Break Soon!"
-            print(msg + f"({datetime.now().strftime('%H:%M:%S')})")                   
+            print(msg + f"({datetime.datetime.now().strftime('%H:%M:%S')})")                   
            
         if self.__lastMinuteBreakIdx != 0:
             if self.__lastMinuteBreakIdx - 1 == self.__break_duration:
                 pass
-            elif self.__lastMinuteBreakIdx - 1 == self.__break_duration - 1*60:
+            elif self.__lastMinuteBreakIdx - 1 == self.__break_duration - 1:
                 msg = f"Ooops, 1 minute left!"
-                print(msg+ f"({datetime.now().strftime('%H:%M:%S')})")
+                print(msg+ f"({datetime.datetime.now().strftime('%H:%M:%S')})")
             elif (self.__lastMinuteBreakIdx - 1) % (5*60) == 0:
                 msg = f"Chill, {15-int((self.__lastMinuteBreakIdx - 1)/60)} mins left!"
-                print(msg+ f"({datetime.now().strftime('%H:%M:%S')})")  
+                print(msg+ f"({datetime.datetime.now().strftime('%H:%M:%S')})")  
 
             if minute != self.__lastMinuteBreak:
                 if self.__lastMinuteBreak - minute >= 1:
