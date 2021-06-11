@@ -41,17 +41,18 @@ def main():
     while True:
 
 
-        # if 
-        if time.time() - habit_time >= 10:
+        # if the 30 seconds has passed, we check the habit tracker again 
+        if time.time() - habit_time >= 30:
             habit_time = time.time()
 
             msg = habitTracker.checkHabits()
 
+            # if the msg is None, then we send the habit to the MCU 
             if "None" not in msg:
                 print(msg)
                 comms.send_message(msg)
 
-
+        # if 120 seconds has passed, we check the calender 
         if time.time() - event_time >= 120:
             event_time = time.time()
 
@@ -61,15 +62,18 @@ def main():
                 print(msg)
                 comms.send_message(msg)
 
+        # if 60 seconds has passed and the timer is on, we check the timer again 
         if timer_on and time.time() - timer_time >= 60:
             timer_time = time.time()
             msg = pomodoro_timer.main_loop()
             if "None" not in msg:
-                comms.send_message(msg)
-
+                if 'Good' in msg:
+                    timer_on = False
+                    comms.send_message(msg)
+        # check if any messages sent from the arduino 
         else:
             arduino_msg = comms.receive_message()
-            if arduino_msg != None and  "start" in arduino_msg:
+            if arduino_msg != None and  "start" in arduino_msg: # if start is sent, we start the timer
                 now = datetime.datetime.now()
                 dt_string = now.strftime("%H:%M:%S")
                 print("Time to Focus! Timer for 30 minutes is starting soon.\n")  

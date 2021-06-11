@@ -1,13 +1,13 @@
-
+// led pins 
 const int BLU_LED = 27;
 const int YEL_LED = 12;
 const int RED_LED = 33;
 
+// timing variables for motor and LEDs
 unsigned long eventStartTime = 0;
 unsigned long eventStartMotor = 0;
 unsigned long pomoTimerStart = 0;
 unsigned long habitTimer = 0;
-
 unsigned long motorTime1 = 0;
 unsigned long motorTime2 = 0;
 unsigned long yTime = 0;
@@ -17,8 +17,6 @@ unsigned long bTime = 0;
 int rBlinks = 0;
 bool redOn = false;
 
-bool pause_timer = false;
-bool start_timer = false;
 bool sending = false;
 
 void setup() {
@@ -40,35 +38,36 @@ void loop() {
   // put your main code here, to run repeatedly:
   String command = receiveMessage();
 
+  // checks for calender event 
   if (command.substring(0, 5) == "event"){
+    command = command.substring(command.indexOf(",") + 1); // takes out the event string 
+    String startTime = "Start: " + command.substring(0, command.indexOf(",")); // gets the start time 
     command = command.substring(command.indexOf(",") + 1);
-    String startTime = "Start: " + command.substring(0, command.indexOf(",")); 
-    command = command.substring(command.indexOf(",") + 1);
-    String endTime = "End: " + command.substring(0, command.indexOf(","));
-    String event = "Event: " + command.substring(command.indexOf(",") + 1);
+    String endTime = "End: " + command.substring(0, command.indexOf(",")); // gets the end time 
+    String event = "Event: " + command.substring(command.indexOf(",") + 1); // full event string 
 
-    writeDisplay(event.c_str(), 0, false);
-    writeDisplay(startTime.c_str(), 1, false);
-    writeDisplay(endTime.c_str(), 2, false);
+    writeDisplay(event.c_str(), 0, false); // event name 
+    writeDisplay(startTime.c_str(), 1, false); // start time
+    writeDisplay(endTime.c_str(), 2, false); // end time 
 
-    digitalWrite(BLU_LED, HIGH);
-    activateMotor(255);
+    digitalWrite(BLU_LED, HIGH); // blue led on 
+    activateMotor(255); // motor on 
     eventStartTime = millis();
     eventStartMotor = millis();
     
-  } 
+  } // if timer is ready, send data 
   else if (command == "Timer Ready"){
     sending = true;
-  } 
+  } // checks for habit 
   else if (command.substring(0, 5) == "Habit"){
     command = command.substring(5);
-    String habit_name = "Habit: " + command.substring(0, command.indexOf(','));
-    writeDisplay(habit_name.c_str(), 2, true);
-    digitalWrite(YEL_LED, HIGH);
+    String habit_name = "Habit: " + command.substring(0, command.indexOf(',')); // gets habit name 
+    writeDisplay(habit_name.c_str(), 2, true); //dispalys name 
+    digitalWrite(YEL_LED, HIGH); // yellow led on 
     habitTimer = millis();
-  } 
+  } // timer on - displays the amount of time left and Focus 
   else if(command.substring(0,5) == "Focus"){
-    String s1 = command.substring(0, command.indexOf(","));
+    String s1 = command.substring(0, command.indexOf(",")); 
     command = command.substring(command.indexOf(",") + 2);
 
     String msg1 = s1 + "!";
@@ -81,7 +80,7 @@ void loop() {
     yTime = millis();
     activateMotor(255);
     motorTime1 = millis();
-  }
+  } // timer on - rights hang when timer is close to being done 
   else if(command.substring(0,4) == "Hang"){
     String s1 = command.substring(0, command.indexOf(","));
     command = command.substring(command.indexOf(",") + 2);
@@ -94,7 +93,7 @@ void loop() {
     rTime = millis();
     activateMotor(255);
     motorTime2 = millis();
-  }
+  } // break on - writes ooops when break has 1 min left 
   else if(command.substring(0,5) == "Ooops"){
     String s1 = command.substring(0, command.indexOf(","));
     command = command.substring(command.indexOf(",") + 2);
@@ -107,7 +106,7 @@ void loop() {
     rTime = millis();
     activateMotor(255);
     motorTime2 = millis();
-  }
+  } // chill when break is almost over 
   else if(command.substring(0,5) == "Chill"){
     String s1 = command.substring(0, command.indexOf(","));
     command = command.substring(command.indexOf(",") + 2);
@@ -121,7 +120,7 @@ void loop() {
     yTime = millis();
     activateMotor(255);
     motorTime1 = millis();
-  }
+  } // good when break is over and timer is over 
   else if(command.substring(0,5) == "Good"){
     String s1 = command.substring(0, command.indexOf("!"));
     command = command.substring(command.indexOf("!") + 2);
@@ -135,23 +134,14 @@ void loop() {
     motorTime1 = millis();
   }
 
+  // if timer is ready and we press button, send start 
   if (sending && getButton() == 1){
     if(!start_timer){
       sendMessage("start");
       start_timer = true;
-    } else if(start_timer && !pause_timer){
-      sendMessage("pause");
-      pause_timer = true;
-    } else if(start_timer && pause_timer){
-      sendMessage("continue");
-      pause_timer = false;
-    }
   }
 
-  if (sending && getButton() == 2){
-    sendMessage("restart timer");
-  }
-
+  // All the following are just timing loops to shut off functions 
   if(millis() - eventStartTime >= 5000){
     digitalWrite(BLU_LED, LOW);
   }
